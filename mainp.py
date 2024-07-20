@@ -1,11 +1,22 @@
+import docx.document
 import musicxml
 from musicxml.parser.parser import _parse_node
 from musicxml import *
-from docx import Document
+import docx
 from docx.shared import Pt
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 import xml
+from converter import char_map
+
+def add_jianpu_paragraph(string:str, doc:docx.document.Document, text_size:int=16):
+    paragraph = doc.add_paragraph(string)
+    run = paragraph.runs[0]
+    run.font.name = 'SimpErhuFont'
+    run.font.size = Pt(text_size)
+
+def unicode_to_char(hex_string:str):
+    return chr(int(hex_string, 16))
 
 # Get xml file
 # with ZipFile('mxl/sample.mxl', 'r') as zipObj:
@@ -16,14 +27,9 @@ import xml
 # mxl:XMLScorePartwise  = _parse_node(xml)
 
 # Create a new Document
-path = "docx/jianpu.docx"
-doc = Document(path)
-p_style = doc.styles['Normal']
+path = "docx/new.docx"
+doc = docx.Document(path)
 
-paragraph = doc.add_paragraph(doc.paragraphs[-1].text)
-run = paragraph.runs[0]
-run.font.name = 'SimpErhuFont'
-run.font.size = Pt(16)
-
-
+new_string = ''.join([unicode_to_char(x) for x in char_map.values()])
+add_jianpu_paragraph(new_string, doc)
 doc.save("docx/new.docx")
