@@ -229,3 +229,42 @@ number_map: dict ={
     '6-adddlll':'0174',
     '7-adddlll':'0175',
 }
+
+measure_map: dict = {
+'bar_line': '002f',
+'bold_double_bar_line': '005c',
+'repeat_start': '005b',
+'repeat_end': '005d',
+'repeat_both': '1ee4',
+'time_signatures': {
+    '1/4': '1ebf',
+    '2/4': '1ec0',
+    '3/4': '1ec1',
+    '4/4': '1ec2',
+    '6/4': '1ec3',
+    '2/8': '1fbf',
+    '3/8': '1ec4',
+    '5/8': '1ec5',
+    '6/8': '1ec6',
+    '7/8': '1ec7',
+    '9/8': '1ec8',
+    '12/8': '1e92',
+    '2/2': '1e93',
+    '3/2': '1e94',
+    '4/2': '1e95',
+},
+'key_signatures': {
+    'C': '1e07',
+    'D': '1e08',
+    'Eb': '1e09',
+    'F': '1e0a',
+    'G': '1e0b',
+    'A': '1e0c',
+    'Bb': '1e0d',
+},
+
+# Dashes lengthen a note by a quater
+'dash': '002d',
+# Dot lengthen a note by: 1dot - half, 2dot - three quaters
+'dot': '0041',
+}
