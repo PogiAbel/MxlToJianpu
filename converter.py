@@ -6,12 +6,17 @@ import musicxml
 # Example: 1-addll = 1 above 2 dots and 2 lines under it
 # Example: 7-ud = 7 under one dot and no lines
 
-number_map: dict ={
-    # 0
+rest_map: dict = {
+        # 0
     '0':'0030',
     '0-l':'0176',
     '0-ll':'0177',
     '0-lll':'0178',
+    '0-llll':''
+}
+
+number_map: dict ={
+
 
     # Simple numbers
     '1':'0031',
@@ -265,6 +270,6 @@ measure_map: dict = {
 
 # Dashes lengthen a note by a quater
 'dash': '002d',
-# Dot lengthen a note by: 1dot - half, 2dot - three quaters
-'dot': '0041',
+# Dot lengthen a note by: 1dot - half beat, 2dot - quarter beat
+'dot': '002e',
 }
