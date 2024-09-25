@@ -159,6 +159,13 @@ def convert_measure(measure:XMLMeasure | None):
         return
     for child in measure.get_children():
         if isinstance(child, XMLNote):
+            # Skip erverything that is not in the first voice and staff
+            if(child.get_children_of_type(XMLVoice)[0].value_ != '1'):
+                continue
+            if(child.get_children_of_type(XMLStaff)[0].value_ != 1):
+                print(child.get_children_of_type(XMLStaff)[0].value_)
+
+                continue
             convert_note(child)
         if isinstance(child, XMLAttributes):
             convert_attributes(child)
@@ -168,7 +175,7 @@ def convert_measure(measure:XMLMeasure | None):
     convert_measure(measure.next)
 
 # Get xml file
-with ZipFile('mxl/sample.mxl', 'r') as zipObj:
+with ZipFile('mxl/twopart.mxl', 'r') as zipObj:
     xml_string = zipObj.read('score.xml').decode('utf-8')
 
 xml = ET.fromstring(xml_string)
@@ -187,12 +194,17 @@ for credit in mxl.get_children_of_type(XMLCredit):
 
 parts:list[XMLPart] = mxl.get_children_of_type(XMLPart)
 
-for part in parts:
-    convert_measure(part.get_children()[0])
 
 # # Create a new Document
 path = "docx/sample.docx"
 doc = docx.Document(path)
+
+
+convert_measure(parts[0].get_children()[0])
+
+# Replace the title and composer
+doc.paragraphs[0].text = doc.paragraphs[0].text.replace('Song Title', credit_list['title'])
+doc.paragraphs[1].text = doc.paragraphs[1].text.replace('Composer', credit_list['composer'])
 
 new_string = ''.join(unicode_to_char(char) for char in WRITE_LIST)
 
