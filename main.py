@@ -14,6 +14,18 @@ from docx.shared import Pt
 import music21 as m
 import math
 
+class Measure:
+    def __init__(self):
+        self.key_signature = ''
+        self.time_signature = ''
+        self.start_bar = ''
+        self.end_bar = ''
+        self.notes = []
+
+    def get_string_list(self):
+        all = [self.key_signature, self.time_signature, self.start_bar] + self.notes+ [ self.end_bar]
+        return [x for x in all if x != '']
+
 WRITE_LIST = []
 my_key = ''
 divison = 0
@@ -103,9 +115,10 @@ def note_to_string(note:XMLNote, duration:int) -> list[str]:
     
     return note_to_unicode(my_key, f'{step}{alter}{octave}', duration)
 
-def convert_note(note:XMLNote | None):
-    global divison, WRITE_LIST
+def convert_note(note:XMLNote | None)-> list[str]:
+    global divison
     duration = note.get_children_of_type(XMLDuration)[0].value_
+    notes = []
 
     # Rest
     if note.get_children_of_type(XMLRest):
@@ -114,68 +127,108 @@ def convert_note(note:XMLNote | None):
         try:
             if frac > 0 and whole < 1:
                 rest_string += '-' + 'l'*int(math.log(int(1/frac),2))
-            WRITE_LIST.append(rest_map[rest_string])
+            notes.append(rest_map[rest_string])
             if whole > 1:
                 if frac > 0:
-                    WRITE_LIST.append(measure_map['dot'])
+                    notes.append(measure_map['dot'])
                 for x in range(1, int(whole)):
-                    WRITE_LIST.append(rest_map[rest_string])
+                    notes.append(rest_map[rest_string])
         except:
             print('Rest not found')
     # Actual note
     else:
-        WRITE_LIST += note_to_string(note, duration)
+        notes += note_to_string(note, duration)
+    return notes
 
-def convert_key_signature(key_signature:XMLKey):
+def convert_key_signature(key_signature:XMLKey)->str:
+    """
+    Converts the key signature to the correct jianpu unicode character
+    """
     key:str = (str)(m.key.KeySignature(key_signature.get_children_of_type(XMLFifths)[0].value_).asKey()).split(' ')[0]
     global my_key
     my_key = key
     try:
-        WRITE_LIST.append(measure_map['key_signatures'][key])
+        return measure_map['key_signatures'][key]
     except:
         print('Key signature not found, defaulting to D')
-        WRITE_LIST.append(measure_map['key_signatures']['D'])
+        return measure_map['key_signatures']['D']
 
-def convert_time_signature(time_signature:XMLTime):
+def convert_time_signature(time_signature:XMLTime)->str:
+    """
+    Converts the time signature to the correct jianpu unicode character
+    """
     time_signature = time_signature.get_children_of_type(XMLBeats)[0].value_+'/'+time_signature.get_children_of_type(XMLBeatType)[0].value_
     try:
-        WRITE_LIST.append(measure_map['time_signatures'][time_signature])
+        return measure_map['time_signatures'][time_signature]
     except:
         print('Time signature not found, defaulting to 4/4')
-        WRITE_LIST.append(measure_map['time_signatures']['4/4'])
+        return measure_map['time_signatures']['4/4']
 
-def convert_attributes(attributes:XMLAttributes):
+def convert_attributes(attributes:XMLAttributes)->tuple[str, str]:
+    """
+    Returns the key and time signature of the attributes in format: (key, time)
+    """
     for child in attributes.get_children():
         if isinstance(child, XMLKey):
-            convert_key_signature(child)
+            key = convert_key_signature(child)
         if isinstance(child, XMLTime):
-            convert_time_signature(child)
+            time = convert_time_signature(child)
         if isinstance(child, XMLDivisions):
             global divison
             divison = int(child.value_)
+    return (key, time)
+
+def convert_barline(barline:XMLBarline, previous:XMLMeasure | None, measure:Measure):
+
+    if barline.get_children_of_type(XMLRepeat):
+
+        match barline.get_children_of_type(XMLRepeat)[0].to_string().split('"')[1]:
+            case 'forward':
+                measure.start_bar = measure_map['bar_lines']['repeat_forward']
+            case 'backward':
+                measure.end_bar = measure_map['bar_lines']['repeat_backward']
+            case _:
+                measure.end_bar = measure_map['bar_lines']['bold_double']
+
+        if previous is not None:
+            for x in previous.get_children_of_type(XMLBarline):
+                if x.get_children_of_type(XMLRepeat)[0].to_string().split('"')[1] == 'backward':
+                    measure.start_bar = measure_map['bar_lines']['repeat_both']
+                    break
+    else:
+        measure.end_bar = measure_map['bar_lines']['bold_double']
 
 def convert_measure(measure:XMLMeasure | None):
+    this_measure = Measure()
+    global WRITE_LIST
+
     if measure is None:
         return
     for child in measure.get_children():
         if isinstance(child, XMLNote):
             # Skip erverything that is not in the first voice and staff
-            if(child.get_children_of_type(XMLVoice)[0].value_ != '1'):
+            if (child.get_children_of_type(XMLVoice)[0].value_ != '1'):
                 continue
-            if(child.get_children_of_type(XMLStaff)[0].value_ != 1):
-                print(child.get_children_of_type(XMLStaff)[0].value_)
-
+            if len(child.get_children_of_type(XMLStaff)) != 0 and (child.get_children_of_type(XMLStaff)[0].value_ != 1) :
                 continue
-            convert_note(child)
+            this_measure.notes += convert_note(child)
         if isinstance(child, XMLAttributes):
-            convert_attributes(child)
+            this_measure.key_signature, this_measure.time_signature = convert_attributes(child)
         if isinstance(child, XMLBarline):
-            WRITE_LIST.append(measure_map['bar_line'])
-    WRITE_LIST.append(measure_map['bar_line'])
+            convert_barline(child,measure.previous,this_measure)
+
+    if this_measure.end_bar == '':
+        this_measure.end_bar = measure_map['bar_lines']['simple']
+
+    if this_measure.start_bar == measure_map['bar_lines']['repeat_both']:
+        WRITE_LIST.pop()
+    if this_measure.start_bar == measure_map['bar_lines']['repeat_forward'] and WRITE_LIST[-1] == measure_map['bar_lines']['simple']:
+        WRITE_LIST.pop()
+    WRITE_LIST += this_measure.get_string_list()
     convert_measure(measure.next)
 
 # Get xml file
-with ZipFile('mxl/twopart.mxl', 'r') as zipObj:
+with ZipFile('mxl/sample.mxl', 'r') as zipObj:
     xml_string = zipObj.read('score.xml').decode('utf-8')
 
 xml = ET.fromstring(xml_string)

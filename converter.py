@@ -236,8 +236,13 @@ number_map: dict ={
 }
 
 measure_map: dict = {
-'bar_line': '002f',
-'bold_double_bar_line': '005c',
+    'bar_lines': {
+        'simple': '002f',
+        'bold_double': '005c',
+        'repeat_forward': '005b',
+        'repeat_backward': '005d',
+        'repeat_both': '1ee4',
+    },
 'repeat_start': '005b',
 'repeat_end': '005d',
 'repeat_both': '1ee4',
