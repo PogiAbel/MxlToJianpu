@@ -1,4 +1,5 @@
 import docx.document
+import os
 import musicxml
 from musicxml.parser.parser import _parse_node
 from musicxml import *
@@ -168,7 +169,21 @@ def convert_measure(measure:XMLMeasure | None):
     convert_measure(measure.next)
 
 # Get xml file
-with ZipFile('mxl/sample.mxl', 'r') as zipObj:
+mxlFiles = [f for f in os.listdir('mxl') if os.path.isfile(os.path.join('mxl', f))]
+print('Available files: ')
+for i, file in enumerate(mxlFiles):
+    print(f'{i}. {file}')
+
+choosen = None
+while choosen is None:
+    try:
+        choosen = int(input('Enter the number of the file you want to convert: '))
+    except:
+        print('Invalid input')
+
+
+
+with ZipFile(f'mxl/{mxlFiles[choosen]}', 'r') as zipObj:
     xml_string = zipObj.read('score.xml').decode('utf-8')
 
 xml = ET.fromstring(xml_string)
@@ -191,10 +206,13 @@ for part in parts:
     convert_measure(part.get_children()[0])
 
 # # Create a new Document
-path = "docx/sample.docx"
+path = f"docx/sample.docx"
 doc = docx.Document(path)
 
 new_string = ''.join(unicode_to_char(char) for char in WRITE_LIST)
 
 add_jianpu_paragraph(new_string, doc)
-doc.save("docx/new.docx")
+doc.save(f"docx/{mxlFiles[choosen].split('.')[0]}.docx")
+
+print('Conversion complete!')
+print(f'File saved to docx/{mxlFiles[choosen].split('.')[0]}.docx')
