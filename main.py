@@ -1,19 +1,25 @@
-import docx.document
+from converter import number_map, measure_map, rest_map
 import os
-import musicxml
+
+import music21 as m
 from musicxml.parser.parser import _parse_node
 from musicxml import *
+
 import docx
+import docx.document
 from docx.shared import Pt
-from zipfile import ZipFile
-import xml.etree.ElementTree as ET
-import xml
-from converter import number_map, measure_map, rest_map
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from docx.shared import Pt
-import music21 as m
+
+import xml.etree.ElementTree as ET
+import xml
+
+from zipfile import ZipFile
 import math
+
+WRITE_LIST = []
+my_key = ''
+divison = 0
 
 class Measure:
     def __init__(self):
@@ -27,9 +33,6 @@ class Measure:
         all = [self.key_signature, self.time_signature, self.start_bar] + self.notes+ [ self.end_bar]
         return [x for x in all if x != '']
 
-WRITE_LIST = []
-my_key = ''
-divison = 0
 
 def add_jianpu_paragraph(string:str, doc:docx.document.Document, text_size:int=16):
     paragraph = doc.add_paragraph(string)
@@ -200,11 +203,12 @@ def convert_barline(barline:XMLBarline, previous:XMLMeasure | None, measure:Meas
         measure.end_bar = measure_map['bar_lines']['bold_double']
 
 def convert_measure(measure:XMLMeasure | None):
-    this_measure = Measure()
     global WRITE_LIST
+    this_measure = Measure()
 
     if measure is None:
         return
+    
     for child in measure.get_children():
         if isinstance(child, XMLNote):
             # Skip erverything that is not in the first voice and staff
@@ -225,59 +229,61 @@ def convert_measure(measure:XMLMeasure | None):
         WRITE_LIST.pop()
     if this_measure.start_bar == measure_map['bar_lines']['repeat_forward'] and WRITE_LIST[-1] == measure_map['bar_lines']['simple']:
         WRITE_LIST.pop()
+
     WRITE_LIST += this_measure.get_string_list()
     convert_measure(measure.next)
 
-# Get xml file
-mxlFiles = [f for f in os.listdir('mxl') if os.path.isfile(os.path.join('mxl', f))]
-print('Available files: ')
-for i, file in enumerate(mxlFiles):
-    print(f'{i}. {file}')
+if __name__ == "__main__":
+    # Get xml file1
+    mxlFiles = [f for f in os.listdir('mxl') if os.path.isfile(os.path.join('mxl', f))]
+    print('Available files: ')
+    for i, file in enumerate(mxlFiles):
+        print(f'{i}. {file}')
 
-choosen = None
-while choosen is None:
-    try:
-        choosen = int(input('Enter the number of the file you want to convert: '))
-    except:
-        print('Invalid input')
-
-
-
-with ZipFile(f'mxl/{mxlFiles[choosen]}', 'r') as zipObj:
-    xml_string = zipObj.read('score.xml').decode('utf-8')
-
-xml = ET.fromstring(xml_string)
-
-mxl:XMLScorePartwise  = _parse_node(xml)
-
-credit_list: list = {}
-for credit in mxl.get_children_of_type(XMLCredit):
-    type = value = ''
-    for child in credit.get_children():
-        if isinstance(child, XMLCreditType):
-            type = child.value_
-        if isinstance(child, XMLCreditWords):
-            value = child.value_
-    credit_list[type] = value
-
-parts:list[XMLPart] = mxl.get_children_of_type(XMLPart)
+    choosen = None
+    while choosen is None:
+        try:
+            choosen = int(input('Enter the number of the file you want to convert: '))
+        except:
+            print('Invalid input')
 
 
-# # Create a new Document
-path = f"docx/sample.docx"
-doc = docx.Document(path)
+
+    with ZipFile(f'mxl/{mxlFiles[choosen]}', 'r') as zipObj:
+        xml_string = zipObj.read('score.xml').decode('utf-8')
+
+    xml = ET.fromstring(xml_string)
+
+    mxl:XMLScorePartwise  = _parse_node(xml)
+
+    credit_list: list = {}
+    for credit in mxl.get_children_of_type(XMLCredit):
+        type = value = ''
+        for child in credit.get_children():
+            if isinstance(child, XMLCreditType):
+                type = child.value_
+            if isinstance(child, XMLCreditWords):
+                value = child.value_
+        credit_list[type] = value
+
+    parts:list[XMLPart] = mxl.get_children_of_type(XMLPart)
 
 
-convert_measure(parts[0].get_children()[0])
+    # # Create a new Document
+    path = f"docx/sample.docx"
+    doc = docx.Document(path)
 
-# Replace the title and composer
-doc.paragraphs[0].text = doc.paragraphs[0].text.replace('Song Title', credit_list['title'])
-doc.paragraphs[1].text = doc.paragraphs[1].text.replace('Composer', credit_list['composer'])
 
-new_string = ''.join(unicode_to_char(char) for char in WRITE_LIST)
+    convert_measure(parts[0].get_children()[0])
 
-add_jianpu_paragraph(new_string, doc)
-doc.save(f"docx/{mxlFiles[choosen].split('.')[0]}.docx")
+    # Replace the title and composer
+    doc.paragraphs[0].text = doc.paragraphs[0].text.replace('Song Title', credit_list['title'])
+    doc.paragraphs[1].text = doc.paragraphs[1].text.replace('Composer', credit_list['composer'])
 
-print('Conversion complete!')
-print(f'File saved to docx/{mxlFiles[choosen].split('.')[0]}.docx')
+    new_string = ''.join(unicode_to_char(char) for char in WRITE_LIST)
+
+    add_jianpu_paragraph(new_string, doc)
+    doc.save(f"docx/{mxlFiles[choosen].split('.')[0]}.docx")
+
+    print('Conversion complete!')
+    print(f'File saved to docx/{mxlFiles[choosen].split('.')[0]}.docx')
