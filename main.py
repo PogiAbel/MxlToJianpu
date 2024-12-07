@@ -252,33 +252,26 @@ if __name__ == "__main__":
     with ZipFile(f'mxl/{mxlFiles[choosen]}', 'r') as zipObj:
         xml_string = zipObj.read('score.xml').decode('utf-8')
 
-    xml = ET.fromstring(xml_string)
+    xml_doc = ET.fromstring(xml_string)
 
-    mxl:XMLScorePartwise  = _parse_node(xml)
+    mxl:XMLScorePartwise  = _parse_node(xml_doc)
 
-    credit_list: list = {}
-    for credit in mxl.get_children_of_type(XMLCredit):
-        type = value = ''
-        for child in credit.get_children():
-            if isinstance(child, XMLCreditType):
-                type = child.value_
-            if isinstance(child, XMLCreditWords):
-                value = child.value_
-        credit_list[type] = value
+    work_title = xml_doc.find('./work/work-title')
+    creator = xml_doc.find('./identification/creator')
 
-    parts:list[XMLPart] = mxl.get_children_of_type(XMLPart)
+    work_title = work_title.text if work_title is not None else 'Unknown title'
+    creator = creator.text if creator is not None else 'Unknown creator'
 
-
-    # # Create a new Document
+    # Create a new Document from sample
     path = f"docx/sample.docx"
     doc = docx.Document(path)
 
-
+    parts:list[XMLPart] = mxl.get_children_of_type(XMLPart)
     convert_measure(parts[0].get_children()[0])
 
     # Replace the title and composer
-    doc.paragraphs[0].text = doc.paragraphs[0].text.replace('Song Title', credit_list['title'])
-    doc.paragraphs[1].text = doc.paragraphs[1].text.replace('Composer', credit_list['composer'])
+    doc.paragraphs[0].text = doc.paragraphs[0].text.replace('Song Title', work_title)
+    doc.paragraphs[1].text = doc.paragraphs[1].text.replace('Composer', creator)
 
     new_string = ''.join(unicode_to_char(char) for char in WRITE_LIST)
 
