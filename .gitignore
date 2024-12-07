@@ -1,2 +1,7 @@
 __pycache__
 test.py
+*.docx
+*.mxl
+.vscode
+.pytest_cache
+mxl-converter
