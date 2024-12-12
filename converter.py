@@ -1,6 +1,3 @@
-import xml
-import musicxml
-
 # unicode string of the characters
 # Number structure: number + '-' + a(above)/u(under) + number of dots in 'd' + number of lines in 'l'
 # Example: 1-addll = 1 above 2 dots and 2 lines under it
@@ -236,7 +233,7 @@ number_map: dict ={
 }
 
 measure_map: dict = {
-    'bar_lines': {
+'bar_lines': {
         'simple': '002f',
         'bold_double': '005c',
         'repeat_forward': '005b',
