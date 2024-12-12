@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.1">
+
+  <xs:element name="jianpu">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="identification" type="identificationType" />
+        <xs:element name="settings">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="beats" type="xs:integer" />
+              <xs:element name="beatType" type="xs:integer" />
+              <xs:element name="key" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="measures">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="measure" type="measureType" minOccurs="1" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="identificationType">
+    <xs:sequence>
+      <xs:element name="title" type="xs:string" />
+      <xs:element name="composer" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="barlineType">
+    <xs:attribute name="type" type="barlineStlyeType" use="required" />
+  </xs:complexType>
+
+  <xs:simpleType name="barlineStlyeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="light" />
+      <xs:enumeration value="heavy" />
+      <xs:enumeration value="repeat" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="measureType">
+    <xs:sequence>
+      <xs:element name="startLine" type="barlineType" minOccurs="0" />
+      <xs:element name="note" type="noteType" minOccurs="1" maxOccurs="unbounded" />
+      <xs:element name="endLine" type="barlineType" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="noteType">
+    <xs:sequence>
+      <xs:element name="base">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0" />
+            <xs:maxInclusive value="7" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="dots" type="dotsType" minOccurs="0">
+      </xs:element>
+      <xs:element name="duration" type="xs:integer" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="dotsType">
+  <xs:simpleContent>
+            <xs:extension base="xs:integer">
+              <xs:attribute name="position" use="required">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:enumeration value="above" />
+                    <xs:enumeration value="below" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:attribute>
+            </xs:extension>
+          </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

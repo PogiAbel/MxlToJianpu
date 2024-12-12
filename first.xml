@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jianpu xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="schema.xsd">
+    <identification>
+        <title>Rain in Jiangnan</title>
+        <composer>Li Bai</composer>
+    </identification>
+    <settings>
+        <beats>4</beats>
+        <beatType>4</beatType>
+        <key>C</key>
+    </settings>
+    <measures>
+        <measure>
+            <note>
+                <base>3</base>
+                <dots position="above">3</dots>
+                <duration>4</duration>
+            </note>
+            <endLine type="heavy" />
+        </measure>
+    </measures>
+</jianpu>
