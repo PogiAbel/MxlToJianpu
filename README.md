@@ -5,11 +5,13 @@ Only translates the notes in voice 1 and staff 1, ignores everything else.
 
 The run.bat creates a virtual environment, then installs the requirements and the runs the main.py file, automates the task for new users
 
+Created an xsd schema for future aplications of storing and automatizing jianpu scores.
+
 Main goals:\
 - [x] note to jianpu
 - [x] note duration
 - [x] time and key signatures
 - [x] barlines
 - [x] title and composer 
-- [ ] measure structure
+- [ ] measure structure (spacing)
 - [ ] bpm
