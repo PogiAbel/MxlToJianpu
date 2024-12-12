@@ -1,4 +1,4 @@
-from converter import number_map, measure_map, rest_map
+from unicode_map import number_map, measure_map, rest_map
 import os
 
 import music21 as m
